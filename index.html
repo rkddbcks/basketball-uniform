@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>농구 유니폼 수요조사</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      padding: 20px;
+    }
+    input, textarea, select, button {
+      background-color: #222;
+      color: #fff;
+      border: 1px solid #444;
+      padding: 8px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #444;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+    a {
+      color: #4fc3f7;
+      text-decoration: underline;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+    #statusMessage {
+      margin-top: 10px;
+      color: #4caf50;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>농구 유니폼 단체 수요조사</h1>
+
+  <!-- 대표자 정보 입력 -->
+  <div class="section">
+    <label>대표자 이름</label>
+    <input type="text" id="leaderName">
+
+    <label>연락처</label>
+    <input type="text" id="leaderContact">
+  </div>
+
+  <!-- 유니폼 디자인 -->
+  <div class="section">
+    <label>유니폼 디자인 상품코드를 입력해주세요</label>
+    <input type="text" id="designCode" placeholder="예: SWU-00123">
+
+    <p>
+      참고 링크:
+      <a href="https://m.swbasketball.co.kr/product/list.html?cate_no=24" target="_blank">기본 유니폼</a>,
+      <a href="https://m.swbasketball.co.kr/product/list.html?cate_no=25" target="_blank">양면 유니폼</a>
+    </p>
+  </div>
+
+  <!-- 사이즈표 안내 링크 -->
+  <div class="section">
+    <label>
+      <a href="https://m.swbasketball.co.kr/article/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/1/170/" target="_blank">
+        사이즈표 안내
+      </a>
+    </label>
+  </div>
+
+  <!-- 선수정보 입력 -->
+  <div class="section">
+    <h2>선수 정보 입력 (최대 20명)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>번호</th>
+          <th>이름</th>
+          <th>등번호</th>
+          <th>사이즈</th>
+        </tr>
+      </thead>
+      <tbody id="playerTableBody">
+        <!-- JavaScript로 채워짐 -->
+      </tbody>
+    </table>
+    <p id="playerCountMsg"></p>
+  </div>
+
+  <button onclick="saveData()">저장</button>
+  <button onclick="exportToCSV()">엑셀(CSV)로 내보내기</button>
+  <p id="statusMessage"></p>
+
+  <script>
+    // 테이블 자동 생성
+    const tbody = document.getElementById("playerTableBody");
+    for (let i = 1; i <= 20; i++) {
+      tbody.innerHTML += `
+        <tr>
+          <td>${i}</td>
+          <td><input type="text" class="name"></td>
+          <td><input type="text" class="backNumber"></td>
+          <td>
+            <select class="size">
+              <option value="">선택</option>
+              <option>4S</option><option>3S</option><option>2S</option><option>S</option>
+              <option>M</option><option>L</option><option>XL</option><option>2XL</option>
+              <option>3XL</option><option>4XL</option><option>5XL</option>
+            </select>
+          </td>
+        </tr>
+      `;
+    }
+
+    function saveData() {
+      const leaderName = document.getElementById("leaderName").value.trim();
+      const leaderContact = document.getElementById("leaderContact").value.trim();
+      const designCode = document.getElementById("designCode").value.trim();
+      const statusMsg = document.getElementById("statusMessage");
+
+      // 간단한 상품코드 유효성 검사
+      if (!/^SWU-\d{5}$/.test(designCode)) {
+        alert("유효한 상품코드 형식이 아닙니다. 예: SWU-00123");
+        return;
+      }
+
+      const names = document.querySelectorAll(".name");
+      const backNumbers = document.querySelectorAll(".backNumber");
+      const sizes = document.querySelectorAll(".size");
+
+      const players = [];
+      for (let i = 0; i < names.length; i++) {
+        const name = names[i].value.trim();
+        const number = backNumbers[i].value.trim();
+        const size = sizes[i].value;
+        if (name || number || size) {
+          players.push({ 번호: i + 1, 이름: name, 등번호: number, 사이즈: size });
+        }
+      }
+
+      if (players.length === 0) {
+        alert("선수 정보를 한 명 이상 입력해주세요.");
+        return;
+      }
+
+      localStorage.setItem("uniformInfo", JSON.stringify({
+        leaderName, leaderContact, designDescription: designCode
+      }));
+      localStorage.setItem("uniformPlayers", JSON.stringify(players));
+
+      statusMsg.textContent = "저장되었습니다 ✔";
+      document.getElementById("playerCountMsg").textContent = `입력된 선수 수: ${players.length}명`;
+    }
+
+    function exportToCSV() {
+      const info = JSON.parse(localStorage.getItem("uniformInfo"));
+      const players = JSON.parse(localStorage.getItem("uniformPlayers")) || [];
+
+      let csv = '\uFEFF';
+      csv += "구분,내용\n";
+      csv += `대표자 이름,${info?.leaderName || ''}\n`;
+      csv += `연락처,${info?.leaderContact || ''}\n`;
+      csv += `상품코드,${info?.designDescription || ''}\n\n`;
+
+      csv += "번호,이름,등번호,사이즈\n";
+      players.forEach(p => {
+        csv += `${p.번호},${p.이름},${p.등번호},${p.사이즈}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "유니폼_수요조사.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+
+</body>
+</html>
