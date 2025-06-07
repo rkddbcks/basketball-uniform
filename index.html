@@ -127,12 +127,6 @@
       const designCode = document.getElementById("designCode").value.trim();
       const statusMsg = document.getElementById("statusMessage");
 
-      // 상품코드 검증 (영어 대문자, 숫자, 하이픈만 허용)
-      if (!/^[A-Z0-9-]+$/.test(designCode)) {
-        alert("상품코드는 영어 대문자(A-Z), 숫자(0-9), 그리고 '-'만 포함해야 합니다.");
-        return;
-      }
-
       const names = document.querySelectorAll(".name");
       const backNumbers = document.querySelectorAll(".backNumber");
       const sizes = document.querySelectorAll(".size");
